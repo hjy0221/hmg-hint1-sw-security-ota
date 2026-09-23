@@ -201,8 +201,17 @@ python .\ota_downloader\test.py --insecure
 
 ## 포트 설명
 
-- `192.168.0.60`은 서버 PC의 IP 주소입니다.
+- README의 `192.168.0.60`은 예시 서버 IP 주소입니다.
+- 서버와 클라이언트를 같은 PC에서 실행하면 `localhost`를 사용해도 됩니다.
+- 다른 PC에서 서버에 접속하려면 `192.168.0.60` 대신 서버 PC의 실제 IP 주소를 사용해야 합니다.
 - `:8000`, `:8001`은 서버 프로그램이 사용하는 포트 번호입니다.
 - `basic_http/test1.py`는 8000번 포트를 사용합니다.
 - `ota_hash_verify/server_firmware.py`는 8001번 포트를 사용합니다.
 - `http://192.168.0.60/123.txt`처럼 포트를 생략하면 기본 HTTP 포트인 80번으로 접속합니다.
+
+예:
+
+```text
+같은 PC에서 접속: http://localhost:8001/fileA_firmware.bin.enc
+다른 PC에서 접속: http://<서버_PC_IP>:8001/fileA_firmware.bin.enc
+```
