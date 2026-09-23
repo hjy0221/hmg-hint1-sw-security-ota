@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+import subprocess
 from pathlib import Path
 
 from Crypto.Hash import SHA256
@@ -15,6 +16,7 @@ SERVER_DIR = ROOT_DIR / "work" / "chunked_ota_server"
 CHUNK_DIR = SERVER_DIR / "chunks"
 PRIVATE_KEY_FILE = ROOT_DIR / "work" / "firmware_server" / "private_key.pem"
 PUBLIC_KEY_FILE = SERVER_DIR / "public_key.pem"
+TLS_CERT_FILE = SERVER_DIR / "server_cert.pem"
 MANIFEST_FILE = SERVER_DIR / "manifest.json"
 
 FILE_SIZE = 100 * 1024 * 1024
@@ -43,6 +45,31 @@ def load_or_create_private_key() -> RSA.RsaKey:
     return private_key
 
 
+def create_tls_certificate() -> None:
+    if TLS_CERT_FILE.exists():
+        return
+
+    subprocess.run(
+        [
+            "openssl",
+            "req",
+            "-new",
+            "-x509",
+            "-key",
+            str(PRIVATE_KEY_FILE),
+            "-out",
+            str(TLS_CERT_FILE),
+            "-days",
+            "365",
+            "-subj",
+            "/CN=localhost",
+            "-addext",
+            "subjectAltName=DNS:localhost,IP:127.0.0.1",
+        ],
+        check=True,
+    )
+
+
 def create_source_file() -> None:
     SOURCE_FILE.parent.mkdir(parents=True, exist_ok=True)
     if SOURCE_FILE.exists() and SOURCE_FILE.stat().st_size == FILE_SIZE:
@@ -67,6 +94,7 @@ def split_and_sign() -> None:
     SERVER_DIR.mkdir(parents=True, exist_ok=True)
     CHUNK_DIR.mkdir(parents=True, exist_ok=True)
     PUBLIC_KEY_FILE.write_bytes(private_key.public_key().export_key("PEM"))
+    create_tls_certificate()
 
     chunks = []
     with SOURCE_FILE.open("rb") as source:
@@ -104,6 +132,7 @@ def split_and_sign() -> None:
         "chunk_count": len(chunks),
         "source_sha256": sha256_file(SOURCE_FILE),
         "public_key": "public_key.pem",
+        "tls_certificate": "server_cert.pem",
         "chunks": chunks,
     }
     MANIFEST_FILE.write_text(json.dumps(manifest, indent=2), encoding="utf-8")
@@ -115,6 +144,7 @@ def main() -> None:
     print("source:", SOURCE_FILE)
     print("server:", SERVER_DIR)
     print("manifest:", MANIFEST_FILE)
+    print("tls_cert:", TLS_CERT_FILE)
     print("source_sha256:", sha256_file(SOURCE_FILE))
 
 

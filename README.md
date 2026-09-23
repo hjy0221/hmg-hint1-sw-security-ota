@@ -205,7 +205,7 @@ python .\ota_downloader\test.py --insecure
 
 ## 5. Chunked OTA
 
-100MiB 파일을 만들고, 1MiB 단위로 나눈 뒤 각 조각마다 SHA-256과 RSA-2048 서명을 생성합니다. 클라이언트는 조각을 순차적으로 다운로드하면서 서명 검증과 해시 검증을 수행하고, 마지막에 하나의 파일로 합쳐 원본과 동일한지 확인합니다.
+100MiB 파일을 만들고, 1MiB 단위로 나눈 뒤 각 조각마다 SHA-256과 RSA-2048 서명을 생성합니다. 서버/클라이언트 사이의 전송 구간은 TLS 소켓으로 암호화합니다. 클라이언트는 조각을 순차적으로 다운로드하면서 서명 검증과 해시 검증을 수행하고, 마지막에 하나의 파일로 합쳐 원본과 동일한지 확인합니다.
 
 사용 알고리즘:
 
@@ -214,9 +214,10 @@ python .\ota_downloader\test.py --insecure
 청크 크기: 1MiB
 해시: SHA-256
 서명: RSA-2048 PKCS#1 v1.5 + SHA-256
+전송 암호화: TLS over TCP socket
 ```
 
-1단계. 100MiB 원본 파일 생성, 1MiB 분할, 해시/서명 생성:
+1단계. 100MiB 원본 파일 생성, 1MiB 분할, 해시/서명/TLS 인증서 생성:
 
 ```powershell
 python .\chunked_ota\prepare_chunks.py
@@ -230,24 +231,27 @@ work/chunked_ota_server/manifest.json
 work/chunked_ota_server/chunks/chunk_0000.bin
 work/chunked_ota_server/chunks/chunk_0000.bin.sha256
 work/chunked_ota_server/chunks/chunk_0000.bin.sha256.sig
+work/chunked_ota_server/server_cert.pem
 ...
 ```
 
-2단계. 청크 서버 실행:
+`server_cert.pem`은 기존 RSA 개인키를 활용해 생성한 학습용 self-signed TLS 인증서입니다.
+
+2단계. TLS 청크 서버 실행:
 
 ```powershell
 python .\chunked_ota\server_chunks.py
 ```
 
-제공 URL:
+서버:
 
 ```text
-http://localhost:8002/manifest.json
+localhost:8002
 ```
 
-다른 PC에서 접속할 경우 `localhost` 대신 서버 PC의 실제 IP 주소를 사용합니다.
+이 예제는 HTTP가 아니라 TLS로 감싼 TCP 소켓을 사용합니다. 클라이언트는 `server_cert.pem`을 CA 파일처럼 로드해서 서버 인증서를 검증합니다.
 
-3단계. 클라이언트 순차 다운로드, 서명 검증, 해시 검증, 병합:
+3단계. 클라이언트 TLS 접속, 순차 다운로드, 서명 검증, 해시 검증, 병합:
 
 ```powershell
 python .\chunked_ota\client_download_verify.py
@@ -255,22 +259,24 @@ python .\chunked_ota\client_download_verify.py
 
 클라이언트 동작:
 
-1. `manifest.json` 다운로드
-2. RSA 공개키 다운로드
-3. 청크를 `chunk_0000.bin`부터 순차 다운로드
-4. 각 청크의 `.sha256` 다운로드
-5. 각 청크의 `.sha256.sig` 다운로드
-6. 공개키로 `.sha256` 서명 검증
-7. 다운로드한 청크의 SHA-256을 직접 계산해 `.sha256` 값과 비교
-8. 검증된 청크를 순서대로 합쳐 `merged_100MiB.bin` 생성
-9. 병합 파일 SHA-256과 원본 파일 SHA-256 비교
+1. TLS 소켓으로 서버에 접속
+2. 서버 인증서 검증
+3. `manifest.json` 다운로드
+4. RSA 공개키 다운로드
+5. 청크를 `chunk_0000.bin`부터 순차 다운로드
+6. 각 청크의 `.sha256` 다운로드
+7. 각 청크의 `.sha256.sig` 다운로드
+8. 공개키로 `.sha256` 서명 검증
+9. 다운로드한 청크의 SHA-256을 직접 계산해 `.sha256` 값과 비교
+10. 검증된 청크를 순서대로 합쳐 `merged_100MiB.bin` 생성
+11. 병합 파일 SHA-256과 원본 파일 SHA-256 비교
 
 성공 예:
 
 ```text
-chunk 0000: signature ok, hash ok
+chunk 0000: tls ok, signature ok, hash ok
 ...
-chunk 0099: signature ok, hash ok
+chunk 0099: tls ok, signature ok, hash ok
 expected merged sha256: ...
 actual merged sha256:   ...
 source compare: identical
