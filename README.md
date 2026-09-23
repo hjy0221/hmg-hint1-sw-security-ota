@@ -207,6 +207,14 @@ python .\ota_downloader\test.py --insecure
 
 100MiB 파일을 만들고, 1MiB 단위로 나눈 뒤 각 조각마다 SHA-256과 RSA-2048 서명을 생성합니다. 서버/클라이언트 사이의 전송 구간은 TLS 소켓으로 암호화합니다. 클라이언트는 조각을 순차적으로 다운로드하면서 서명 검증과 해시 검증을 수행하고, 마지막에 하나의 파일로 합쳐 원본과 동일한지 확인합니다.
 
+파일 역할:
+
+| 파일 | 역할 |
+| --- | --- |
+| `prepare_chunks.py` | 100MiB 원본 생성, 1MiB 분할, SHA-256 생성, RSA 서명 생성, TLS 인증서 생성 |
+| `server_chunks.py` | TLS 소켓 서버 실행, 클라이언트가 요청한 manifest/청크/해시/서명 파일 전송 |
+| `client_download_verify.py` | TLS 접속, 청크 순차 다운로드, RSA 서명 검증, SHA-256 검증, 병합, 원본 동일성 확인 |
+
 사용 알고리즘:
 
 ```text
@@ -215,6 +223,19 @@ python .\ota_downloader\test.py --insecure
 해시: SHA-256
 서명: RSA-2048 PKCS#1 v1.5 + SHA-256
 전송 암호화: TLS over TCP socket
+```
+
+실행 순서 요약:
+
+```powershell
+# 1. 준비: 100MiB 원본, 청크, 해시, 서명, TLS 인증서 생성
+python .\chunked_ota\prepare_chunks.py
+
+# 2. 서버 실행: 이 터미널은 켜둔 상태로 유지
+python .\chunked_ota\server_chunks.py
+
+# 3. 클라이언트 실행: 새 터미널에서 실행
+python .\chunked_ota\client_download_verify.py
 ```
 
 1단계. 100MiB 원본 파일 생성, 1MiB 분할, 해시/서명/TLS 인증서 생성:
