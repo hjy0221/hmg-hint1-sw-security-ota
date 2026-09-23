@@ -8,7 +8,8 @@ from pathlib import Path
 
 
 DEFAULT_URL = "https://192.168.0.64:8080/firmware.bin"
-DEFAULT_DEST = Path("./work/device/active.bin")
+ROOT_DIR = Path(__file__).resolve().parents[1]
+DEFAULT_DEST = ROOT_DIR / "work" / "device" / "active.bin"
 
 
 def download_firmware(

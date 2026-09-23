@@ -9,7 +9,8 @@ SERVER_IP = "192.168.0.60"
 PORT = 8001
 BASE_URL = f"http://{SERVER_IP}:{PORT}"
 FIRMWARE_NAME = "fileA_firmware.bin"
-DEST_DIR = Path("./work/device")
+ROOT_DIR = Path(__file__).resolve().parents[1]
+DEST_DIR = ROOT_DIR / "work" / "device"
 DEST = DEST_DIR / FIRMWARE_NAME
 
 

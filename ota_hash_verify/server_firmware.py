@@ -8,7 +8,8 @@ from pathlib import Path
 HOST = ""
 PORT = 8001
 SERVER_IP = "192.168.0.60"
-SERVER_DIR = Path("./work/firmware_server")
+ROOT_DIR = Path(__file__).resolve().parents[1]
+SERVER_DIR = ROOT_DIR / "work" / "firmware_server"
 FIRMWARE = SERVER_DIR / "fileA_firmware.bin"
 HASH_FILE = SERVER_DIR / "fileA_firmware.bin.sha256"
 
