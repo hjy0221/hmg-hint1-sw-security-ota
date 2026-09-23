@@ -20,6 +20,10 @@
 │   └── client_verify.py
 ├── ota_downloader/
 │   └── test.py
+├── chunked_ota/
+│   ├── prepare_chunks.py
+│   ├── server_chunks.py
+│   └── client_download_verify.py
 └── work/
 ```
 
@@ -199,14 +203,89 @@ python .\ota_downloader\test.py --url http://192.168.0.64:8080/firmware.bin --de
 python .\ota_downloader\test.py --insecure
 ```
 
+## 5. Chunked OTA
+
+100MiB 파일을 만들고, 1MiB 단위로 나눈 뒤 각 조각마다 SHA-256과 RSA-2048 서명을 생성합니다. 클라이언트는 조각을 순차적으로 다운로드하면서 서명 검증과 해시 검증을 수행하고, 마지막에 하나의 파일로 합쳐 원본과 동일한지 확인합니다.
+
+사용 알고리즘:
+
+```text
+파일 크기: 100MiB
+청크 크기: 1MiB
+해시: SHA-256
+서명: RSA-2048 PKCS#1 v1.5 + SHA-256
+```
+
+1단계. 100MiB 원본 파일 생성, 1MiB 분할, 해시/서명 생성:
+
+```powershell
+python .\chunked_ota\prepare_chunks.py
+```
+
+생성 위치:
+
+```text
+work/chunked_ota/source_100MiB.bin
+work/chunked_ota_server/manifest.json
+work/chunked_ota_server/chunks/chunk_0000.bin
+work/chunked_ota_server/chunks/chunk_0000.bin.sha256
+work/chunked_ota_server/chunks/chunk_0000.bin.sha256.sig
+...
+```
+
+2단계. 청크 서버 실행:
+
+```powershell
+python .\chunked_ota\server_chunks.py
+```
+
+제공 URL:
+
+```text
+http://localhost:8002/manifest.json
+```
+
+다른 PC에서 접속할 경우 `localhost` 대신 서버 PC의 실제 IP 주소를 사용합니다.
+
+3단계. 클라이언트 순차 다운로드, 서명 검증, 해시 검증, 병합:
+
+```powershell
+python .\chunked_ota\client_download_verify.py
+```
+
+클라이언트 동작:
+
+1. `manifest.json` 다운로드
+2. RSA 공개키 다운로드
+3. 청크를 `chunk_0000.bin`부터 순차 다운로드
+4. 각 청크의 `.sha256` 다운로드
+5. 각 청크의 `.sha256.sig` 다운로드
+6. 공개키로 `.sha256` 서명 검증
+7. 다운로드한 청크의 SHA-256을 직접 계산해 `.sha256` 값과 비교
+8. 검증된 청크를 순서대로 합쳐 `merged_100MiB.bin` 생성
+9. 병합 파일 SHA-256과 원본 파일 SHA-256 비교
+
+성공 예:
+
+```text
+chunk 0000: signature ok, hash ok
+...
+chunk 0099: signature ok, hash ok
+expected merged sha256: ...
+actual merged sha256:   ...
+source compare: identical
+result: all chunks verified and merged
+```
+
 ## 포트 설명
 
 - README의 `192.168.0.60`은 예시 서버 IP 주소입니다.
 - 서버와 클라이언트를 같은 PC에서 실행하면 `localhost`를 사용해도 됩니다.
 - 다른 PC에서 서버에 접속하려면 `192.168.0.60` 대신 서버 PC의 실제 IP 주소를 사용해야 합니다.
-- `:8000`, `:8001`은 서버 프로그램이 사용하는 포트 번호입니다.
+- `:8000`, `:8001`, `:8002`는 서버 프로그램이 사용하는 포트 번호입니다.
 - `basic_http/test1.py`는 8000번 포트를 사용합니다.
 - `ota_hash_verify/server_firmware.py`는 8001번 포트를 사용합니다.
+- `chunked_ota/server_chunks.py`는 8002번 포트를 사용합니다.
 - `http://192.168.0.60/123.txt`처럼 포트를 생략하면 기본 HTTP 포트인 80번으로 접속합니다.
 
 예:
