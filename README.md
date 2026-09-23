@@ -114,6 +114,15 @@ http://192.168.0.60:8001/fileA_firmware.bin.enc.sig
 http://192.168.0.60:8001/public_key.pem
 ```
 
+서버가 보내는 파일:
+
+| 파일 | 의미 |
+| --- | --- |
+| `fileA_firmware.bin.enc` | AES-256-CBC로 암호화된 펌웨어 |
+| `fileA_firmware.bin.enc.sha256` | 암호화된 펌웨어의 SHA-256 해시값 |
+| `fileA_firmware.bin.enc.sig` | 암호화된 펌웨어에 대한 RSA-2048 서명 |
+| `public_key.pem` | RSA 서명 검증에 사용할 공개키 |
+
 클라이언트 실행:
 
 ```powershell
@@ -131,6 +140,14 @@ python .\ota_hash_verify\client_verify.py
 7. 공개키로 RSA 서명 검증
 8. AES-256-CBC로 암호문 복호화
 9. 검증과 복호화가 성공하면 `work/device/fileA_firmware.bin`에 저장
+
+클라이언트 검증 기준:
+
+| 단계 | 성공 조건 | 실패 시 의미 |
+| --- | --- | --- |
+| SHA-256 해시 검증 | 서버 해시와 클라이언트 계산 해시가 같음 | 다운로드 중 파일이 깨졌거나 암호문이 변경됨 |
+| RSA 서명 검증 | 공개키로 서명이 정상 검증됨 | 서버가 만든 파일이 아니거나 서명이 변경됨 |
+| AES 복호화 | 패딩 오류 없이 복호화됨 | 키, IV, 암호문 중 하나가 올바르지 않음 |
 
 성공 예:
 
