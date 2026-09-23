@@ -6,12 +6,14 @@
 
 - `hash_sha256.py`: 문자열 또는 파일의 SHA-256 해시를 hex로 출력
 - `aes_encrypt_hex.py`: AES-CBC 방식으로 문자열을 암호화하고 key, IV, ciphertext를 hex로 출력
+- `test.py`: OTA 펌웨어 이미지를 다운로드해 `work/device/active.bin`에 저장
 
 ## Usage
 
 ```powershell
 python .\hash_sha256.py "hello"
 python .\aes_encrypt_hex.py "hello"
+python .\test.py
 ```
 
 파일 해시:
@@ -24,4 +26,16 @@ AES 키와 IV를 직접 지정:
 
 ```powershell
 python .\aes_encrypt_hex.py "hello" --key-hex 00112233445566778899aabbccddeeff00112233445566778899aabbccddeeff --iv-hex 0102030405060708090a0b0c0d0e0f10
+```
+
+OTA 다운로드 URL 변경:
+
+```powershell
+python .\test.py --url http://192.168.0.64:8080/firmware.bin
+```
+
+로컬 HTTPS 테스트 서버가 self-signed 인증서를 사용하는 경우:
+
+```powershell
+python .\test.py --insecure
 ```
