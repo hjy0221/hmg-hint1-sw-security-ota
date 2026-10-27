@@ -321,3 +321,34 @@ result: all chunks verified and merged
 같은 PC에서 접속: http://localhost:8001/fileA_firmware.bin.enc
 다른 PC에서 접속: http://<서버_PC_IP>:8001/fileA_firmware.bin.enc
 ```
+\n---\n\n## English
+
+### Hyundai Motor Group HINT Cohort 1: Software Security and OTA
+
+This educational Python repository exercises SHA-256 hashing, AES encryption, HTTP file serving, OTA downloads, firmware hash and RSA signature verification, and AES decryption. The directory tree and complete PowerShell examples appear in the Korean section above.
+
+### Crypto and basic HTTP
+
+`crypto/hash_sha256.py` hashes a string or, with `--file`, a file. `crypto/aes_encrypt_hex.py` demonstrates AES-CBC and prints the key, IV, and ciphertext in hex; `--key-hex` and `--iv-hex` allow explicit values. `basic_http/test1.py` serves the `basic_http` directory on port 8000, and `basic_http/test2.py` downloads the example file to `work/device/153.txt`.
+
+### Encrypted OTA download
+
+Run `ota_hash_verify/server_firmware.py`, then `ota_hash_verify/client_verify.py`. The server encrypts firmware with AES-256-CBC using a 16-byte zero IV, calculates SHA-256 over the ciphertext, signs it using RSA-2048 PKCS#1 v1.5 with SHA-256, and serves the ciphertext, hash, signature, and public key over HTTP on port 8001.
+
+The client downloads these files, calculates and compares the ciphertext hash, verifies the RSA signature, decrypts with AES-256-CBC, and saves the result as `work/device/fileA_firmware.bin` only after successful verification and decryption. A hash mismatch indicates corruption or changed ciphertext; failed signature verification indicates a different file or modified signature; a padding failure indicates an incorrect key, IV, or ciphertext.
+
+This is a teaching example with an AES key fixed in code. Real OTA systems require secure key management and a certificate trust system rather than embedding symmetric keys directly in source.
+
+### OTA downloader
+
+`ota_downloader/test.py --url <URL>` downloads firmware; `--dest` selects the destination. The `--insecure` option is shown for a local HTTPS test server with a self-signed certificate.
+
+### Chunked OTA
+
+`chunked_ota/prepare_chunks.py` creates a 100 MiB source, splits it into 1 MiB chunks, and creates hashes, RSA-2048 PKCS#1 v1.5 signatures, and a self-signed TLS certificate. Start `server_chunks.py` and then `client_download_verify.py` in another terminal. The TLS-wrapped TCP server listens on `localhost:8002`; the client loads `server_cert.pem` as a CA file to verify the server certificate.
+
+The client downloads the manifest, public key, each chunk, its `.sha256` file, and its `.sha256.sig` file. It verifies the signature and computed hash for each chunk, merges verified chunks in order into `merged_100MiB.bin`, and compares its SHA-256 against the original. Generated source, manifest, chunks, hashes, signatures, and certificate are under `work/chunked_ota` and `work/chunked_ota_server`.
+
+### Network addresses
+
+`192.168.0.60` in examples is an example server address. Use `localhost` on the same machine or the actual server IP from another machine. Ports 8000, 8001, and 8002 belong to the basic HTTP, firmware, and chunked servers respectively; an HTTP URL without a port defaults to port 80.
