@@ -321,7 +321,10 @@ result: all chunks verified and merged
 같은 PC에서 접속: http://localhost:8001/fileA_firmware.bin.enc
 다른 PC에서 접속: http://<서버_PC_IP>:8001/fileA_firmware.bin.enc
 ```
-\n---\n\n## English
+
+---
+
+## English
 
 ### Hyundai Motor Group HINT Cohort 1: Software Security and OTA
 
