@@ -4,8 +4,6 @@
 
 ## 日本語
 
-[日本語](https://github.com/hjy0221/hmg-hint1-sw-security-ota#%E6%97%A5%E6%9C%AC%E8%AA%9E) · [English](https://github.com/hjy0221/hmg-hint1-sw-security-ota#english) · [한국어](https://github.com/hjy0221/hmg-hint1-sw-security-ota#%ED%95%9C%EA%B5%AD%EC%96%B4)
-
 現代自動車グループHINT第1期SWセキュリティおよびOTA学習用リポジトリです。
 
 ハッシュ、AES暗号化、HTTPファイル提供、OTAダウンロード、ファームウェアハッシュ検証、RSA署名検証、AES復号化フローをPythonで実践します。
@@ -329,8 +327,6 @@ result: all chunks verified and merged
 
 ## English
 
-[日本語](https://github.com/hjy0221/hmg-hint1-sw-security-ota#%E6%97%A5%E6%9C%AC%E8%AA%9E) · [English](https://github.com/hjy0221/hmg-hint1-sw-security-ota#english) · [한국어](https://github.com/hjy0221/hmg-hint1-sw-security-ota#%ED%95%9C%EA%B5%AD%EC%96%B4)
-
 Hyundai Motor Group HINT 1st SW security and OTA learning repository.
 
 Practice hashing, AES encryption, HTTP file serving, OTA download, firmware hash verification, RSA signature verification, and AES decryption flow in Python.
@@ -653,8 +649,6 @@ Example:
 ```
 
 ## 한국어
-
-[日本語](https://github.com/hjy0221/hmg-hint1-sw-security-ota#%E6%97%A5%E6%9C%AC%E8%AA%9E) · [English](https://github.com/hjy0221/hmg-hint1-sw-security-ota#english) · [한국어](https://github.com/hjy0221/hmg-hint1-sw-security-ota#%ED%95%9C%EA%B5%AD%EC%96%B4)
 
 현대자동차그룹 HINT 1기 SW 보안 및 OTA 학습용 저장소입니다.
 
